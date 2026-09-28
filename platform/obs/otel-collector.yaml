@@ -1,0 +1,49 @@
+# Real OpenTelemetry Collector. Telemetry lands in Postgres rather than
+# Tempo/Loki for v1 -- swapping to those later is an exporter block here and no
+# change in any service, which is the point of routing through a collector at
+# all instead of exporting straight to the control plane.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 256
+  memory_limiter:
+    check_interval: 2s
+    limit_mib: 256
+    spike_limit_mib: 64
+
+exporters:
+  otlphttp/ashs:
+    endpoint: http://ashs-control:8080/otlp
+    encoding: json
+    # The exporter gzips by default. The sink decompresses regardless, but
+    # sending plain JSON over a local bridge network costs nothing and keeps
+    # the payload inspectable with curl when debugging the pipeline.
+    compression: none
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 1s
+      max_interval: 10s
+
+service:
+  telemetry:
+    logs:
+      level: warn
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/ashs]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/ashs]

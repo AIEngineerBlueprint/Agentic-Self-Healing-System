@@ -1,0 +1,217 @@
+# ASHS service catalog.
+#
+# Start with a file, do not build a catalog. This is the ownership and
+# dependency model the whole control plane reasons over: who owns what, what
+# calls what, where the source lives, and how much autonomy each service has.
+#
+# `repository` is the join key back to the `code.repository` span attribute, so
+# a failing span resolves to an owner with no lookup table and no guessing.
+
+version: "1.0"
+
+# Human-readable names. The dashboard is projected in front of people who do not
+# think in HTTP verbs and route paths -- "Carbon Ledger / Calculate footprint"
+# says what is broken; "POST /api/footprint/calculate" makes them decode it.
+products:
+  cfc-product:
+    name: Carbon Ledger
+    description: Household carbon footprint calculator
+  cap-calc:
+    name: Calculation Capability
+  cap-factors:
+    name: Emission Factors Capability
+
+owners:
+  product-team:
+    name: Product Engineering
+    contact: product-oncall@example.invalid
+  capability-calc-team:
+    name: Calculation Capability
+    contact: calc-oncall@example.invalid
+  capability-factors-team:
+    name: Emission Factors Capability
+    contact: factors-oncall@example.invalid
+
+services:
+  cfc-web:
+    display_name: Carbon Ledger web
+    stack: cfc-product
+    repository: cfc-product
+    owner: product-team
+    kind: frontend
+    autonomy_level: L3
+    base_url: http://cfc-web:3000
+    depends_on: [cfc-api]
+
+  cfc-api:
+    display_name: Carbon Ledger API
+    stack: cfc-product
+    repository: cfc-product
+    owner: product-team
+    kind: bff
+    # v1 runs the product at L3: merge and deploy autonomously once verification
+    # passes. Capabilities stay at L1 -- diagnose only -- until Scenario 2.
+    autonomy_level: L3
+    # Reachability. These were hardcoded in executor.py, gateway.py and
+    # repair.py, which is what made the control plane a Carbon-Ledger tool
+    # rather than a control plane that happens to monitor Carbon Ledger.
+    base_url: http://cfc-api:8080
+    # Where a human can reach it from outside the mesh. Used for the reproduce
+    # command in an escalation report -- an in-mesh hostname is useless there.
+    external_base_url: http://localhost:8000
+    health_path: /api/health
+    contract_url: http://cfc-api:8080/openapi.json
+    source_root: cfc-product/api/src
+    # Where a patch lands and where the agent's test is written. Without this
+    # the planner falls back to guessing a path from the repository name.
+    source_layout:
+      patch_target: cfc-product/api/src/cfc_api/main.py
+      tests_dir: cfc-product/api/tests
+    # The env var the agent's generated pytest reads to find this service.
+    test_env_var: CFC_API_URL
+    entry_points:
+      - name: Calculate a footprint
+        path: "POST /api/footprint/calculate"
+      - name: Load regions
+        path: "GET /api/regions"
+    # How a repair to this service is proved. `replay` reproduces the defect;
+    # `regression_probe` is the request that must KEEP working, so a "fix" that
+    # passes the failing case by breaking everything else is caught.
+    #
+    # `checks` names functions in repair.VALIDATION_CHECKS. The assertions stay
+    # in code -- auditable, no eval, no expression language -- and only the
+    # WIRING is configuration.
+    validation:
+      replay:
+        method: POST
+        path: /api/footprint/calculate
+        body: {period: monthly, region: IN-KA, activities: {}}
+        expect_status: 200
+        expect_json: {total_kgco2e: 0, breakdown: []}
+      regression_probe:
+        method: POST
+        path: /api/footprint/calculate
+        body:
+          period: monthly
+          region: IN-KA
+          activities: {electricity_kwh: 320, petrol_car_km: 800, diet: medium_meat}
+        expect_status: 200
+        checks: [total_is_positive, breakdown_percentages_sum_to_100]
+    depends_on: [calc-api, factor-api]
+
+  calc-api:
+    display_name: Footprint calculation
+    stack: cap-calc
+    repository: cap-calc
+    owner: capability-calc-team
+    kind: capability
+    autonomy_level: L1
+    base_url: http://calc-api:8080
+    external_base_url: http://localhost:8081
+    health_path: /health
+    contract_url: http://calc-api:8080/openapi.json
+    source_root: cap-calc/src
+    source_layout:
+      patch_target: cap-calc/src/calc_api/main.py
+      tests_dir: cap-calc/tests
+    test_env_var: CALC_API_URL
+    validation:
+      replay:
+        method: POST
+        path: /v1/calculate
+        body: {period: monthly, region: IN-KA, activities: {}}
+        expect_status: 200
+        expect_json: {total_kgco2e: 0}
+      regression_probe:
+        method: POST
+        path: /v1/calculate
+        body:
+          period: monthly
+          region: IN-KA
+          activities: {electricity_kwh: 320, petrol_car_km: 800, diet: medium_meat}
+        expect_status: 200
+        checks: [total_is_positive]
+    depends_on: [factor-api]
+    # Operation -> the response schema its payload must validate against.
+    # This mapping is what makes contract validation deterministic rather than
+    # a guess about which schema applies to which body.
+    operations:
+      "POST /v1/calculate":
+        success_schema: CalculateResponse
+        error_schema: TypedError
+
+  factor-api:
+    display_name: Emission factor lookup
+    stack: cap-factors
+    repository: cap-factors
+    owner: capability-factors-team
+    kind: capability
+    # L1: diagnose and draft, never merge. A conclusive contract violation
+    # clears the confidence floor on its own, so autonomy level is what keeps
+    # a human in the loop for a capability whose numbers end up in customer
+    # disclosures. Raising this to L3 lets the capability-repair-agent merge
+    # through the same test gate the product uses.
+    autonomy_level: L1
+    # Per-service floors beat policy.yaml and the environment. Uncomment to make
+    # this repo demand more certainty than the product before anything touches
+    # it autonomously -- emission factors end up in customer disclosures.
+    # Left off by default: a conclusive contract violation scores exactly 0.88,
+    # so a floor of 0.87 would work but sits one hundredth away from flipping.
+    # confidence_floors:
+    #   autonomous: 0.90
+    #   review: 0.60
+    base_url: http://factor-api:8080
+    external_base_url: http://localhost:8082
+    health_path: /health
+    contract_url: http://factor-api:8080/openapi.json
+    source_root: cap-factors/src
+    source_layout:
+      patch_target: cap-factors/src/factor_api/main.py
+      tests_dir: cap-factors/tests
+    test_env_var: FACTOR_API_URL
+    validation:
+      # The bulk lookup the product actually depends on. A null factor here is
+      # what breaks every consumer upstream.
+      # The bulk lookup the product depends on, with the activity keys this
+      # service actually publishes -- `electricity_grid`, not the product's
+      # `electricity_kwh`. cfc-api maps between them, and a replay written in
+      # the CONSUMER's vocabulary reproduces nothing here.
+      replay:
+        method: GET
+        path: /v1/factors/bulk?region=IN-KA&activities=electricity_grid,petrol_car
+        expect_status: 200
+        checks: [factors_all_numeric]
+      regression_probe:
+        method: GET
+        path: /v1/regions
+        expect_status: 200
+        checks: [body_is_non_empty]
+    depends_on: []
+    operations:
+      "GET /v1/factors/bulk":
+        success_schema: BulkFactorResponse
+        error_schema: TypedError
+      "GET /v1/factors":
+        success_schema: Factor
+        error_schema: TypedError
+      "GET /v1/regions":
+        success_schema: RegionListResponse
+        error_schema: TypedError
+
+# Routing table: fault domain (a repository) -> the agent that may repair it.
+# Ownership boundaries are hard boundaries. The Product agent never patches
+# capability code; it files evidence and the capability's own agent decides.
+repair_agents:
+  product-repair-agent:
+    handles_repositories: [cfc-product]
+    write_paths:
+      - "cfc-product/api/src/**"
+      - "cfc-product/web/src/**"
+      - "cfc-product/api/tests/**"
+  capability-repair-agent:
+    handles_repositories: [cap-calc, cap-factors]
+    write_paths:
+      - "cap-calc/src/**"
+      - "cap-calc/tests/**"
+      - "cap-factors/src/**"
+      - "cap-factors/tests/**"

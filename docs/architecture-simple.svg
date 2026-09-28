@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 744" width="1240" height="744"
+     font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>ASHS — the engines that do the work</title>
+
+  <defs>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="gg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#3fb950"/>
+    </marker>
+    <marker id="gp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#a855f7"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="744" fill="#ffffff"/>
+
+  <!-- === your services === -->
+  <rect x="30" y="250" width="164" height="104" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="112" y="292" font-size="16" font-weight="700" text-anchor="middle" fill="#0f172a">Your services</text>
+  <text x="112" y="314" font-size="11" text-anchor="middle" fill="#64748b">anything listed in</text>
+  <text x="112" y="331" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" fill="#2f81f7">services.yaml</text>
+
+  <path d="M194 288 H236" fill="none" stroke="#a855f7" stroke-width="2" marker-end="url(#gp)"/>
+  <text x="215" y="277" font-size="10" text-anchor="middle" fill="#7c3aed">traces</text>
+
+  <!-- === control plane === -->
+  <rect x="244" y="70" width="764" height="500" rx="12" fill="#f8fbff" stroke="#2f81f7" stroke-width="1.5"/>
+  <text x="266" y="98" font-size="11" font-weight="700" letter-spacing="1.6" fill="#2f81f7">ASHS CONTROL PLANE — the engines that do the work</text>
+
+  <g font-size="14" font-weight="700" text-anchor="middle">
+    <text x="352" y="130" fill="#0f172a">1 · Detect</text>
+    <text x="536" y="130" fill="#15803d">2 · Attribute</text>
+    <text x="720" y="130" fill="#6b21a8">3 · Repair</text>
+    <text x="904" y="130" fill="#15803d">4 · Prove</text>
+  </g>
+  <g stroke="#e2e8f0" stroke-width="1">
+    <line x1="444" y1="140" x2="444" y2="396"/>
+    <line x1="628" y1="140" x2="628" y2="396"/>
+    <line x1="812" y1="140" x2="812" y2="396"/>
+  </g>
+
+  <!-- column 1 : detect -->
+  <rect x="266" y="150" width="172" height="58" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="278" y="172" font-size="12.5" font-weight="700" fill="#0f172a">Detector</text>
+  <text x="278" y="189" font-size="10" fill="#64748b">clusters errors, fingerprints,</text>
+  <text x="278" y="201" font-size="10" fill="#64748b">dedupes to one incident</text>
+
+  <rect x="266" y="218" width="172" height="58" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="278" y="240" font-size="12.5" font-weight="700" fill="#0f172a">Evidence builder</text>
+  <text x="278" y="257" font-size="10" fill="#64748b">bounds it to one exemplar</text>
+  <text x="278" y="269" font-size="10" fill="#64748b">trace — not a log dump</text>
+
+  <!-- column 2 : attribute -->
+  <rect x="450" y="150" width="172" height="76" rx="7" fill="#ecfdf5" stroke="#3fb950" stroke-width="2.5"/>
+  <text x="462" y="172" font-size="12.5" font-weight="700" fill="#15803d">Attribution engine</text>
+  <text x="462" y="189" font-size="10" fill="#15803d">trace walk · contract validation</text>
+  <text x="462" y="201" font-size="10" fill="#15803d">deploy correlation · blast radius</text>
+  <text x="462" y="217" font-size="10" font-weight="700" fill="#15803d">deterministic — no model</text>
+
+  <rect x="450" y="236" width="172" height="58" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="462" y="258" font-size="12.5" font-weight="700" fill="#0f172a">Router</text>
+  <text x="462" y="275" font-size="10" fill="#64748b">repository → the one agent</text>
+  <text x="462" y="287" font-size="10" fill="#64748b">allowed to touch it</text>
+
+  <!-- column 3 : repair -->
+  <rect x="634" y="150" width="172" height="52" rx="7" fill="#faf5ff" stroke="#a855f7"/>
+  <text x="646" y="171" font-size="12.5" font-weight="700" fill="#6b21a8">Diagnosis agent</text>
+  <text x="646" y="188" font-size="10" fill="#7c3aed">model — the narrative only</text>
+
+  <rect x="634" y="210" width="172" height="52" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="646" y="231" font-size="12.5" font-weight="700" fill="#0f172a">Planner</text>
+  <text x="646" y="248" font-size="10" fill="#64748b">typed plan: target, test, rollback</text>
+
+  <rect x="634" y="270" width="172" height="58" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="2.5"/>
+  <text x="646" y="292" font-size="12.5" font-weight="700" fill="#b45309">Policy engine</text>
+  <text x="646" y="309" font-size="10" fill="#b45309">9 gates. Any failure sends</text>
+  <text x="646" y="321" font-size="10" fill="#b45309">it to a human instead.</text>
+
+  <rect x="634" y="336" width="172" height="58" rx="7" fill="#faf5ff" stroke="#a855f7"/>
+  <text x="646" y="358" font-size="12.5" font-weight="700" fill="#6b21a8">Repair agent</text>
+  <text x="646" y="375" font-size="10" fill="#7c3aed">model — writes the patch</text>
+  <text x="646" y="387" font-size="10" fill="#7c3aed">and the test that proves it</text>
+
+  <!-- column 4 : prove -->
+  <rect x="818" y="150" width="172" height="76" rx="7" fill="#ecfdf5" stroke="#3fb950" stroke-width="2.5"/>
+  <text x="830" y="172" font-size="12.5" font-weight="700" fill="#15803d">Test gate</text>
+  <text x="830" y="189" font-size="10" fill="#15803d">the test must FAIL before the</text>
+  <text x="830" y="201" font-size="10" fill="#15803d">patch and PASS after —</text>
+  <text x="830" y="217" font-size="10" font-weight="700" fill="#15803d">or the patch is rejected</text>
+
+  <rect x="818" y="236" width="172" height="58" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="830" y="258" font-size="12.5" font-weight="700" fill="#0f172a">Executor</text>
+  <text x="830" y="275" font-size="10" fill="#64748b">snapshot → apply → wait for</text>
+  <text x="830" y="287" font-size="10" fill="#64748b">healthy → restore on failure</text>
+
+  <rect x="818" y="304" width="172" height="58" rx="7" fill="#fff" stroke="#2f81f7"/>
+  <text x="830" y="326" font-size="12.5" font-weight="700" fill="#0f172a">Validation agent</text>
+  <text x="830" y="343" font-size="10" fill="#64748b">replays the original request,</text>
+  <text x="830" y="355" font-size="10" fill="#64748b">checks the error rate settled</text>
+
+  <!-- flow between phases -->
+  <g stroke="#94a3b8" stroke-width="1.6" marker-end="url(#g)">
+    <line x1="416" y1="123" x2="466" y2="123"/>
+    <line x1="600" y1="123" x2="650" y2="123"/>
+    <line x1="784" y1="123" x2="834" y2="123"/>
+  </g>
+
+  <!-- foundation: gateway + audit -->
+  <rect x="266" y="410" width="356" height="68" rx="8" fill="#eff6ff" stroke="#2f81f7"/>
+  <text x="278" y="433" font-size="12.5" font-weight="700" fill="#0f172a">Tool gateway</text>
+  <text x="278" y="451" font-size="10" fill="#475569">Every change goes through 11 typed tools. Path allowlist</text>
+  <text x="278" y="464" font-size="10" fill="#475569">per agent. No raw shell, no kubectl, no eval.</text>
+
+  <rect x="634" y="410" width="356" height="68" rx="8" fill="#f0fdf4" stroke="#3fb950"/>
+  <text x="646" y="433" font-size="12.5" font-weight="700" fill="#15803d">Audit store</text>
+  <text x="646" y="451" font-size="10" fill="#166534">Append-only. Every decision with the evidence behind it —</text>
+  <text x="646" y="464" font-size="10" fill="#166534">the whole episode replays from one incident ID.</text>
+
+  <text x="266" y="502" font-size="10.5" fill="#94a3b8">Every engine writes to the audit store. Every engine that changes anything goes through the gateway.</text>
+  <text x="266" y="519" font-size="10.5" fill="#94a3b8">The loop is a reconciler — each pass drives every open incident forward from wherever it actually is.</text>
+
+  <!-- === outcomes === -->
+  <path d="M1008 190 H1044" fill="none" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#g)"/>
+  <rect x="1052" y="152" width="158" height="78" rx="9" fill="#f0fdf4" stroke="#3fb950" stroke-width="2"/>
+  <text x="1131" y="181" font-size="14" font-weight="700" text-anchor="middle" fill="#15803d">Repaired</text>
+  <text x="1131" y="201" font-size="10" text-anchor="middle" fill="#15803d">confident enough to act,</text>
+  <text x="1131" y="216" font-size="10" text-anchor="middle" fill="#15803d">and the test proved it</text>
+
+  <path d="M1008 300 C1028 300, 1032 316, 1046 318" fill="none" stroke="#94a3b8" stroke-width="1.4"
+        stroke-dasharray="4 3" marker-end="url(#g)"/>
+  <rect x="1052" y="280" width="158" height="78" rx="9" fill="#fef2f2" stroke="#f87171" stroke-width="2"/>
+  <text x="1131" y="309" font-size="14" font-weight="700" text-anchor="middle" fill="#b91c1c">Escalated</text>
+  <text x="1131" y="329" font-size="10" text-anchor="middle" fill="#b91c1c">not confident enough, or</text>
+  <text x="1131" y="344" font-size="10" text-anchor="middle" fill="#b91c1c">the fix did not hold</text>
+
+  <!-- write-back -->
+  <path d="M1131 358 V596 H112 V356" fill="none" stroke="#3fb950" stroke-width="1.8"
+        stroke-dasharray="6 4" marker-end="url(#gg)"/>
+  <text x="640" y="589" font-size="11" font-weight="600" text-anchor="middle" fill="#15803d">the patch goes back only to the repository that owns it</text>
+
+  <!-- === footline === -->
+  <rect x="30" y="622" width="1180" height="88" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="54" y="650" font-size="13" font-weight="700" fill="#0f172a">Where the model is, and where it is not</text>
+  <text x="54" y="674" font-size="13" fill="#334155">Two engines call a model: the diagnosis agent writes the explanation, and the repair agent writes the patch and its test.</text>
+  <text x="54" y="695" font-size="13" fill="#334155">Every other engine — detection, attribution, routing, policy, the test gate, validation — is ordinary deterministic code.</text>
+</svg>

@@ -1,0 +1,29 @@
+name: cfc-product
+
+networks:
+  ashs-mesh: { external: true }
+
+services:
+  cfc-api:
+    build: ./api
+    environment:
+      SERVICE_VERSION: "1.0.0"
+      CALC_API_URL: http://calc-api:8080
+      FACTOR_API_URL: http://factor-api:8080
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      CORS_ORIGIN: http://localhost:3000
+      DEMO_BUGS_ENABLED: "true"
+    ports: ["8000:8080"]
+    networks: [ashs-mesh]
+    volumes:
+      - ./api/src:/app/src
+
+  cfc-web:
+    build:
+      context: ./web
+      args:
+        VITE_API_BASE: http://localhost:8000
+    ports: ["3000:3000"]
+    # Not on the mesh. The browser reaches it over a host port; it never talks
+    # to a capability directly.
+    depends_on: [cfc-api]

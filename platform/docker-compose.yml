@@ -1,0 +1,73 @@
+name: ashs
+
+networks:
+  ashs-mesh: { external: true }
+  internal:  { driver: bridge }
+
+volumes:
+  ashs-db-data:
+
+services:
+  ashs-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ashs
+      POSTGRES_PASSWORD: ashs
+      POSTGRES_DB: ashs
+    volumes:
+      - ashs-db-data:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ashs -d ashs"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  ashs-control:
+    build: ./control
+    environment:
+      SERVICE_VERSION: "1.0.0"
+      ASHS_DB_URL: postgresql://ashs:ashs@ashs-db:5432/ashs
+      # LLM provider is behind one module. bedrock | anthropic
+      LLM_PROVIDER: ${LLM_PROVIDER:-bedrock}
+      LLM_MODEL: ${LLM_MODEL:-anthropic.claude-opus-5}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Confidence floors. Unset -> policy.yaml decides. services.yaml can
+      # override per service; see catalog.confidence_floors().
+      ASHS_AUTONOMOUS_FLOOR: ${ASHS_AUTONOMOUS_FLOOR:-}
+      ASHS_REVIEW_FLOOR: ${ASHS_REVIEW_FLOOR:-}
+    ports: ["8090:8080"]
+    networks: [ashs-mesh, internal]
+    depends_on:
+      ashs-db: { condition: service_healthy }
+    volumes:
+      - ./control/src:/app/src
+      # Repair agents get scoped write access to service source. The tool
+      # gateway enforces which agent may touch which path.
+      - ../services:/workspace/services
+      # Catalog and policy are read at startup. Mounted rather than baked so
+      # a rule change is an edit and a restart, not a rebuild.
+      - ./catalog:/app/catalog:ro
+      - ./policy:/app/policy:ro
+
+  ashs-ui:
+    build:
+      context: ./ui
+      args:
+        VITE_CTRL_BASE: http://localhost:8090
+        VITE_PRODUCT_BASE: http://localhost:3000
+    ports: ["3001:3001"]
+    depends_on: [ashs-control]
+
+  traffic-gen:
+    build: ./traffic
+    environment:
+      CFC_API_URL: http://cfc-api:8080
+      RATE_PER_SECOND: "1.0"
+      ERROR_FREE_ONLY: "true"
+    networks: [ashs-mesh]
+    restart: unless-stopped

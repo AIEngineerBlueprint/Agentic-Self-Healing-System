@@ -1,0 +1,41 @@
+name: cap-factors
+
+networks:
+  ashs-mesh: { external: true }
+  internal:  { driver: bridge }
+
+volumes:
+  factor-db-data:
+
+services:
+  factor-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: factors
+      POSTGRES_PASSWORD: factors
+      POSTGRES_DB: factors
+    volumes:
+      - factor-db-data:/var/lib/postgresql/data
+      - ./data/seed.sql:/docker-entrypoint-initdb.d/01-seed.sql:ro
+    # Internal network ONLY. Unreachable from the product by design -- this is
+    # the Compose equivalent of namespace isolation.
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U factors -d factors"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  factor-api:
+    build: .
+    environment:
+      SERVICE_VERSION: "1.0.0"
+      FACTOR_DB_URL: postgresql://factors:factors@factor-db:5432/factors
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      DEMO_BUGS_ENABLED: "true"
+    ports: ["8082:8080"]
+    networks: [ashs-mesh, internal]
+    depends_on:
+      factor-db: { condition: service_healthy }
+    volumes:
+      - ./src:/app/src

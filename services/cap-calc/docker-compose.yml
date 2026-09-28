@@ -1,0 +1,18 @@
+name: cap-calc
+
+networks:
+  ashs-mesh: { external: true }
+
+services:
+  calc-api:
+    build: .
+    environment:
+      SERVICE_VERSION: "1.0.0"
+      # No service name is ever hardcoded in application code.
+      FACTOR_API_URL: http://factor-api:8080
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      DEMO_BUGS_ENABLED: "true"
+    ports: ["8081:8080"]
+    networks: [ashs-mesh]
+    volumes:
+      - ./src:/app/src

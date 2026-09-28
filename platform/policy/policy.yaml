@@ -1,0 +1,84 @@
+# ASHS policy. Enforced in code by the policy engine and the tool gateway --
+# never by prompt. A guardrail an LLM can talk its way past is not a guardrail.
+#
+# Phase 1 reads only `confidence` (to decide diagnose-vs-escalate). The rest is
+# declared now so Phase 2 wires an existing document rather than inventing one.
+
+version: "1.0"
+
+# Single flag that drops the whole system to L0 observe. Tested in the demo.
+kill_switch: false
+
+confidence:
+  # Above this, act at the service's configured autonomy level.
+  autonomous_floor: 0.85
+  # Between review_floor and autonomous_floor: diagnose and draft, but a human
+  # must review regardless of autonomy level.
+  review_floor: 0.60
+  # Below review_floor: escalate with the evidence bundle. Do not guess.
+
+# Only these action types may ever run autonomously.
+allowed_actions:
+  - code_patch
+  - config_change
+  - add_test
+  - revert_deploy
+
+# Everything else routes to a human whatever the confidence.
+escalate_actions:
+  - schema_migration
+  - dependency_upgrade
+  - infrastructure_change
+  - credential_rotation
+
+# PROTECTED ZONE -- always human, whatever the confidence, whatever the level.
+#
+# Emission factor values and calculation coefficients are here for a reason any
+# audience accepts without explanation: these numbers end up in disclosures. A
+# machine may flag that they look wrong. A machine does not get to quietly
+# change what a customer reports as their carbon output.
+protected_paths:
+  - "cap-factors/data/**"
+  - "cap-factors/src/factor_api/db.py"
+  - "cap-calc/src/calc_api/calc/formulas.py"
+  - "**/migrations/**"
+  - "**/docker-compose*.yml"
+  - "**/Dockerfile"
+  - "**/requirements.txt"
+  - "**/package.json"
+  # No self-modification. Agents cannot touch the autofix system itself.
+  - "platform/**"
+
+# Sensitive zones always route to a human whatever the confidence.
+sensitive_zones:
+  - name: emission_factors
+    reason: >-
+      Emission factor values and calculation coefficients determine what a
+      customer reports as their carbon output. These figures end up in public
+      disclosures. Flagging is permitted; autonomous change is not.
+    paths:
+      - "cap-factors/data/**"
+      - "cap-calc/src/calc_api/calc/formulas.py"
+
+budgets:
+  # Max autonomous merges per service per day. Exceeding it trips a circuit
+  # breaker and freezes autonomy for that service.
+  max_autonomous_merges_per_service_per_day: 3
+  # Two failed verification attempts on the same fingerprint ends the run.
+  max_verification_attempts_per_fingerprint: 2
+  # One open repair per incident fingerprint. Prevents storms during an outage.
+  max_open_repairs_per_fingerprint: 1
+
+test_gate:
+  # A patch is rejected unless it adds a test that FAILS on the pre-patch commit
+  # and passes after. A fix without a failing test is not a fix.
+  require_failing_test_pre_patch: true
+  require_regression_suite_pass: true
+
+detection:
+  # An incident needs this many error occurrences in the window before it is
+  # real. One error is noise; a sustained rate is an incident.
+  min_occurrences: 3
+  window_minutes: 5
+  # Error rate above this fraction of requests to a service also triggers.
+  error_rate_threshold: 0.10
