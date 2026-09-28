@@ -38,7 +38,7 @@ that no model call appears at or before the attribution decision.
 
 ```bash
 cp .env.example .env         # add AWS credentials (see below)
-make up                      # 7 containers, healthy in ~20s
+make up                      # 10 containers, healthy in ~20s
 make verify                  # 45 checks across 4 phases
 make demo-prep && make demo  # the 5-minute demo, two acts (runs in 1m47s)
 ```
@@ -142,7 +142,7 @@ recovery from a partial failure is automatic.
 Scenario 1:  trace_walk 0.40 + exoneration 0.15×2 + blast_radius 0.22 = 0.92
 ```
 
-Routing is on confidence, never certainty: **> 0.85** act at the service's
+Routing is on confidence, never certainty: **≥ 0.85** act at the service's
 autonomy level · **0.60–0.85** human review · **< 0.60** escalate, do not guess.
 
 ### Guardrails — enforced in code, never by prompt
@@ -157,7 +157,7 @@ autonomy level · **0.60–0.85** human review · **< 0.60** escalate, do not gu
 | Fingerprint dedupe | one open repair per defect; spans predating a repair never reopen it |
 | No self-modification | agents cannot touch `platform/**` |
 | Kill switch | halts the entire reconciler, every pass |
-| Signed audit trail | every decision, tool call, prompt and diff |
+| Audit trail | every decision, tool call, model call (model, tokens, latency) and diff, sequenced per incident |
 
 The agent has **11 typed tools** and no raw shell, `kubectl`, `eval` or
 unrestricted file access. The exit tests assert those do not exist.
@@ -180,8 +180,11 @@ requirements, detection thresholds.
 
 ### Adding a service
 
-1. Add it to `services.yaml` with `repository`, `owner`, `contract_url`,
-   `source_root`, `depends_on`, `autonomy_level`.
+1. Add it to `services.yaml` with `repository`, `owner`, `autonomy_level`,
+   `depends_on`, `base_url`, `health_path`, `contract_url`, `operations`
+   (operation → response schema), `source_root`, `source_layout`
+   (`patch_target`, `tests_dir`), `test_env_var` and `validation`
+   (`replay`, optional `regression_probe`). Copy an existing entry.
 2. Give the service the four cross-cutting requirements:
    - OpenTelemetry with `service.name`, `service.version`, `deployment.stack`
      and **`code.repository`** on every span
@@ -268,3 +271,4 @@ Honest list — all documented, none hidden:
 - `DEMO-PLAYBOOK-full.md` — the 12-minute narrated version
 - `carbon-footprint-calculator-demo-requirements.md` — the app spec
 - `autonomous-bugfix-agentic-pipeline.md` — the engineering argument
+- `docs/` — demo deck (`DEMO-DECK.md` and `.pptx`), architecture diagrams, logo
